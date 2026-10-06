@@ -291,7 +291,7 @@ export default function GameView({ home, away, bet, onFinish, onExit, spectator 
       )}
 
       {/* Aposta */}
-      {!spectator && <div className="game-bet absolute left-3 top-3 z-10 w-56 rounded-xl bg-slate-950/80 p-3 text-xs shadow-xl ring-1 ring-white/15 backdrop-blur sm:w-64 sm:text-sm">
+      {bet.stake > 0 && <div className="game-bet absolute left-3 top-3 z-10 w-56 rounded-xl bg-slate-950/80 p-3 text-xs shadow-xl ring-1 ring-white/15 backdrop-blur sm:w-64 sm:text-sm">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-400">Sua aposta</p>
         <p className="mt-1 font-semibold">{pickLabel(bet.pick, home, away)}</p>
         <p className="text-white/70">
@@ -383,7 +383,7 @@ export default function GameView({ home, away, bet, onFinish, onExit, spectator 
         <div className="absolute inset-0 z-30 grid place-items-center bg-black/70 p-4">
           <div className="w-full max-w-sm rounded-2xl bg-slate-900 p-6 text-center ring-1 ring-white/15">
             <p className="text-lg font-bold">Sair da partida?</p>
-            <p className="mt-2 text-sm text-white/70">{spectator ? "Voltar para a escolha das seleções?" : `Se sair agora você perde a aposta de ${formatBRL(bet.stake)}.`}</p>
+            <p className="mt-2 text-sm text-white/70">{bet.stake === 0 ? "Voltar para a escolha das seleções?" : `Se sair agora você perde a aposta de ${formatBRL(bet.stake)}.`}</p>
             <div className="mt-5 flex gap-3">
               <button
                 onClick={() => setConfirmExit(false)}

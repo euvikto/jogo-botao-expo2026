@@ -167,9 +167,9 @@ export default function BotaoApp() {
 
   function startMatch() {
     setError(null);
-    if (spectator) {
+    if (!spectator) {
       setResult(null);
-      setRunning({ betId: 0, home, away, spectator: true, bet: { pick: "home", stake: 0, odds: 0 } });
+      setRunning({ betId: 0, home, away, spectator: false, bet: { pick: "home", stake: 0, odds: 0 } });
       return;
     }
     if (stakeCents < 100) return setError("Aposta mínima: R$ 1,00.");
@@ -191,6 +191,7 @@ export default function BotaoApp() {
       setResult(null);
       setRunning({
         betId: betRow.id,
+        spectator: true,
         home,
         away,
         bet: { pick, stake: betRow.stake, odds: betRow.odds },
@@ -206,7 +207,7 @@ export default function BotaoApp() {
     const r = running;
     if (!r) return;
     setRunning(null);
-    if (r.spectator) {
+    if (r.bet.stake === 0) {
       setResult({ spectator: true, won: false, homeGoals: hg, awayGoals: ag, payout: 0, stake: 0, home: r.home, away: r.away });
       return;
     }
@@ -351,10 +352,10 @@ export default function BotaoApp() {
 
           {/* Aposta */}
           <section className="space-y-6">
-            {spectator ? <div className="rounded-3xl bg-white/[0.06] p-5 ring-1 ring-white/10 backdrop-blur">
-              <h2 className="text-lg font-bold">2. Assista à partida</h2>
-              <p className="mt-3 text-white/70">As duas seleções jogam automaticamente. Você pode trocar a câmera e a velocidade durante o jogo.</p>
-              <button onClick={startMatch} className="mt-5 w-full rounded-2xl bg-emerald-500 py-4 text-lg font-black text-slate-950 hover:bg-emerald-400">Assistir ao jogo ⚽</button>
+            {!spectator ? <div className="rounded-3xl bg-white/[0.06] p-5 ring-1 ring-white/10 backdrop-blur">
+              <h2 className="text-lg font-bold">2. Jogue a partida</h2>
+              <p className="mt-3 text-white/70">Você controla sua seleção: toque em um botão, puxe para trás e solte para chutar.</p>
+              <button onClick={startMatch} className="mt-5 w-full rounded-2xl bg-emerald-500 py-4 text-lg font-black text-slate-950 hover:bg-emerald-400">Jogar no estádio ⚽</button>
               <p className="mt-2 text-center text-xs text-white/50">Sem aposta e sem gastar saldo.</p>
             </div> : <div className="rounded-3xl bg-white/[0.06] p-5 ring-1 ring-white/10 backdrop-blur">
               <h2 className="text-lg font-bold">2. Faça sua aposta</h2>
@@ -433,7 +434,7 @@ export default function BotaoApp() {
                 onClick={startMatch}
                 className="mt-5 w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-green-400 py-4 text-lg font-black text-slate-950 shadow-xl transition enabled:hover:scale-[1.01] enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {busy ? "Apostando…" : "Apostar e jogar no estádio ⚽"}
+                {busy ? "Apostando…" : "Apostar e assistir — CPU x CPU ⚽"}
               </button>
               <p className="mt-2 text-center text-xs text-white/40">
                 Dinheiro fictício. Se sair da partida antes do fim, a aposta é perdida.
@@ -515,7 +516,7 @@ export default function BotaoApp() {
               onClick={() => setResult(null)}
               className="mt-6 w-full rounded-2xl bg-emerald-500 py-3 text-lg font-black text-slate-950 hover:bg-emerald-400"
             >
-              {result.spectator ? "Assistir outra partida" : "Nova aposta"}
+              {result.stake === 0 ? "Jogar outra partida" : "Nova aposta"}
             </button>
           </div>
         </div>
