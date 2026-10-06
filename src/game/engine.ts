@@ -87,6 +87,7 @@ export class Match {
   plan: Plan | null = null;
   lastScorer: 0 | 1 | null = null;
   readonly humanTeam: 0 | 1 | null;
+  readonly localPlayers: boolean;
 
   private timer = THINK_TIME;
   private movesThisTurn = 0;
@@ -98,7 +99,8 @@ export class Match {
   private listeners: ((e: MatchEvent) => void)[] = [];
   private hitCooldown = 0;
 
-  constructor(home: Team, away: Team, spectator = false) {
+  constructor(home: Team, away: Team, spectator = false, localPlayers = false) {
+    this.localPlayers = localPlayers;
     this.humanTeam = spectator ? null : 0;
     this.teams = [home, away];
     let id = 0;
@@ -278,13 +280,17 @@ export class Match {
 
   private prepareTurn() {
     this.plan = null;
-    if (this.turn !== this.humanTeam) this.planMove();
+    if (!this.isHumanTurn) this.planMove();
+  }
+
+  get isHumanTurn() {
+    return this.localPlayers || this.turn === this.humanTeam;
   }
 
   /** Inicia a mira do jogador humano em um de seus botões. */
   beginHumanAim(bodyId: number) {
-    if (this.humanTeam === null || this.phase !== "thinking" || this.turn !== this.humanTeam) return false;
-    const body = this.buttons[this.humanTeam].find((b) => b.id === bodyId);
+    if (!this.isHumanTurn || this.phase !== "thinking") return false;
+    const body = this.buttons[this.turn].find((b) => b.id === bodyId);
     if (!body) return false;
     this.plan = { body, dx: 1, dz: 0, speed: 0, good: true };
     return true;
@@ -292,7 +298,7 @@ export class Match {
 
   /** Atualiza a direção/força da puxada. Retorna a força de 0 a 1. */
   aimHuman(dx: number, dz: number) {
-    if (this.phase !== "thinking" || this.turn !== this.humanTeam || !this.plan) return 0;
+    if (this.phase !== "thinking" || !this.isHumanTurn || !this.plan) return 0;
     const distance = Math.hypot(dx, dz);
     if (distance < 0.01) {
       this.plan.speed = 0;
@@ -305,11 +311,11 @@ export class Match {
   }
 
   cancelHumanAim() {
-    if (this.phase === "thinking" && this.turn === this.humanTeam) this.plan = null;
+    if (this.phase === "thinking" && this.isHumanTurn) this.plan = null;
   }
 
   shootHuman() {
-    if (this.phase !== "thinking" || this.turn !== this.humanTeam || !this.plan || this.plan.speed < 8) {
+    if (this.phase !== "thinking" || !this.isHumanTurn || !this.plan || this.plan.speed < 8) {
       this.cancelHumanAim();
       return false;
     }
@@ -380,7 +386,7 @@ export class Match {
 
     switch (this.phase) {
       case "thinking":
-        if (this.turn !== this.humanTeam) {
+        if (!this.isHumanTurn) {
           this.timer -= h;
           if (this.timer <= 0) this.launch();
         }

@@ -15,6 +15,7 @@ export interface ActiveBet {
 
 interface Props {
   spectator?: boolean;
+  localPlayers?: boolean;
   home: Team;
   away: Team;
   bet: ActiveBet;
@@ -43,7 +44,7 @@ function pickLabel(pick: Pick, home: Team, away: Team) {
   return "Empate";
 }
 
-export default function GameView({ home, away, bet, onFinish, onExit, spectator = false }: Props) {
+export default function GameView({ home, away, bet, onFinish, onExit, spectator = false, localPlayers = false }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const speedRef = useRef(2);
   const camRef = useRef<CamMode>("tv");
@@ -72,7 +73,7 @@ export default function GameView({ home, away, bet, onFinish, onExit, spectator 
 
   useEffect(() => {
     const el = mountRef.current!;
-    const match = new Match(home, away, spectator);
+    const match = new Match(home, away, spectator, localPlayers);
     const stadium = new Stadium3D(el, match);
     const sfx = new Sfx();
     sfxRef.current = sfx;
@@ -166,7 +167,8 @@ export default function GameView({ home, away, bet, onFinish, onExit, spectator 
     const canvas = stadium.getCanvas();
     let selectedId: number | null = null;
     const pointerDown = (event: PointerEvent) => {
-      const body = stadium.pickButton(event.clientX, event.clientY, 0);
+      if (!match.isHumanTurn || selectedId !== null) return;
+      const body = stadium.pickButton(event.clientX, event.clientY, match.turn);
       if (!body || !match.beginHumanAim(body.id)) return;
       selectedId = body.id;
       canvas.setPointerCapture(event.pointerId);
@@ -213,7 +215,7 @@ export default function GameView({ home, away, bet, onFinish, onExit, spectator 
       canvas.removeEventListener("pointercancel", pointerUp);
       stadium.dispose();
     };
-  }, [home, away, spectator]);
+  }, [home, away, spectator, localPlayers]);
 
   const changeSpeed = (s: number) => {
     speedRef.current = s;
@@ -267,6 +269,8 @@ export default function GameView({ home, away, bet, onFinish, onExit, spectator 
             ? "Encerrado"
             : hud.phase === "halftime"
               ? "Intervalo"
+              : localPlayers
+                ? `Jogador ${hud.turn + 1} · ${hud.turn === 0 ? home.name : away.name}`
               : spectator
                 ? `CPU · ${hud.turn === 0 ? home.name : away.name}`
                 : hud.turn === 0
@@ -275,12 +279,12 @@ export default function GameView({ home, away, bet, onFinish, onExit, spectator 
         </p>
       </div>
 
-      {!spectator && hud.phase === "thinking" && hud.turn === 0 && (
+      {!spectator && hud.phase === "thinking" && (localPlayers || hud.turn === 0) && (
         <div className="game-aim pointer-events-none absolute bottom-5 left-1/2 z-10 w-[min(92vw,520px)] -translate-x-1/2 rounded-2xl bg-slate-950/85 px-5 py-3 text-center shadow-2xl ring-1 ring-white/15 backdrop-blur">
           <p className="font-bold text-emerald-300">
-            {isAiming ? "Solte para chutar" : "Clique em um botão, puxe para trás e solte"}
+            {isAiming ? "Solte para chutar" : localPlayers ? `Jogador ${hud.turn + 1}: puxe um botão para trás e solte` : "Clique em um botão, puxe para trás e solte"}
           </p>
-          <p className="mt-0.5 text-xs text-white/65">Você joga com {home.name}. Quanto mais puxar, mais forte será a jogada.</p>
+          <p className="mt-0.5 text-xs text-white/65">{localPlayers ? `Vez de ${hud.turn === 0 ? home.name : away.name}.` : `Você joga com ${home.name}.`} Quanto mais puxar, mais forte será a jogada.</p>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/15">
             <div
               className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-amber-300 to-rose-500 transition-[width]"

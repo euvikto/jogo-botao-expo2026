@@ -29,6 +29,7 @@ interface BetRow {
 }
 
 interface Running {
+  localPlayers?: boolean;
   spectator?: boolean;
   betId: number;
   home: Team;
@@ -116,6 +117,7 @@ export default function BotaoApp() {
 
   const [running, setRunning] = useState<Running | null>(null);
   const [spectator, setSpectator] = useState(false);
+  const [localPlayers, setLocalPlayers] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
 
   const home = getTeam(homeId)!;
@@ -169,7 +171,7 @@ export default function BotaoApp() {
     setError(null);
     if (!spectator) {
       setResult(null);
-      setRunning({ betId: 0, home, away, spectator: false, bet: { pick: "home", stake: 0, odds: 0 } });
+      setRunning({ betId: 0, home, away, spectator: false, localPlayers, bet: { pick: "home", stake: 0, odds: 0 } });
       return;
     }
     if (stakeCents < 100) return setError("Aposta mínima: R$ 1,00.");
@@ -268,6 +270,7 @@ export default function BotaoApp() {
         away={running.away}
         bet={running.bet}
         spectator={running.spectator}
+        localPlayers={running.localPlayers}
         onFinish={finishMatch}
         onExit={exitMatch}
       />
@@ -314,8 +317,9 @@ export default function BotaoApp() {
         </header>
 
         <div className="mt-6 flex flex-wrap gap-3" aria-label="Modo de partida">
-          <button onClick={() => setSpectator(false)} aria-pressed={!spectator} className={`rounded-xl px-5 py-3 font-bold ${!spectator ? "bg-emerald-500 text-slate-950" : "bg-white/10"}`}>Jogar — você x CPU</button>
-          <button onClick={() => setSpectator(true)} aria-pressed={spectator} className={`rounded-xl px-5 py-3 font-bold ${spectator ? "bg-emerald-500 text-slate-950" : "bg-white/10"}`}>Assistir — CPU x CPU</button>
+          <button onClick={() => { setSpectator(false); setLocalPlayers(false); }} aria-pressed={!spectator && !localPlayers} className={`rounded-xl px-5 py-3 font-bold ${!spectator && !localPlayers ? "bg-emerald-500 text-slate-950" : "bg-white/10"}`}>Jogar — você x CPU</button>
+          <button onClick={() => { setSpectator(false); setLocalPlayers(true); }} aria-pressed={localPlayers} className={`rounded-xl px-5 py-3 font-bold ${localPlayers ? "bg-emerald-500 text-slate-950" : "bg-white/10"}`}>2 jogadores — local</button>
+          <button onClick={() => { setSpectator(true); setLocalPlayers(false); }} aria-pressed={spectator} className={`rounded-xl px-5 py-3 font-bold ${spectator ? "bg-emerald-500 text-slate-950" : "bg-white/10"}`}>Assistir — CPU x CPU</button>
         </div>
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.35fr_1fr]">
           {/* Confronto */}
@@ -345,8 +349,8 @@ export default function BotaoApp() {
             </div>
 
             <div className="mt-5 grid gap-5 sm:grid-cols-2">
-              <TeamPicker title={spectator ? "Mandante (CPU)" : "Você controla"} value={homeId} other={awayId} onPick={(id) => selectTeam("home", id)} />
-              <TeamPicker title="Adversário (CPU)" value={awayId} other={homeId} onPick={(id) => selectTeam("away", id)} />
+              <TeamPicker title={localPlayers ? "Jogador 1" : spectator ? "Mandante (CPU)" : "Você controla"} value={homeId} other={awayId} onPick={(id) => selectTeam("home", id)} />
+              <TeamPicker title={localPlayers ? "Jogador 2" : "Adversário (CPU)"} value={awayId} other={homeId} onPick={(id) => selectTeam("away", id)} />
             </div>
           </section>
 
@@ -354,7 +358,7 @@ export default function BotaoApp() {
           <section className="space-y-6">
             {!spectator ? <div className="rounded-3xl bg-white/[0.06] p-5 ring-1 ring-white/10 backdrop-blur">
               <h2 className="text-lg font-bold">2. Jogue a partida</h2>
-              <p className="mt-3 text-white/70">Você controla sua seleção: toque em um botão, puxe para trás e solte para chutar.</p>
+              <p className="mt-3 text-white/70">{localPlayers ? "Dois jogadores no mesmo aparelho, alternando as jogadas. Na sua vez, toque em um botão da sua seleção, puxe para trás e solte." : "Você controla sua seleção: toque em um botão, puxe para trás e solte para chutar."}</p>
               <button onClick={startMatch} className="mt-5 w-full rounded-2xl bg-emerald-500 py-4 text-lg font-black text-slate-950 hover:bg-emerald-400">Jogar no estádio ⚽</button>
               <p className="mt-2 text-center text-xs text-white/50">Sem aposta e sem gastar saldo.</p>
             </div> : <div className="rounded-3xl bg-white/[0.06] p-5 ring-1 ring-white/10 backdrop-blur">
