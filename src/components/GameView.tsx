@@ -203,6 +203,8 @@ export default function GameView({ home, away, bet, onFinish, onExit, spectator 
       clearTimeout(bannerTimer);
       clearTimeout(finishTimer);
       off();
+      sfx.dispose();
+      sfxRef.current = null;
       window.removeEventListener("pointerdown", unlock);
       window.removeEventListener("keydown", unlock);
       canvas.removeEventListener("pointerdown", pointerDown);

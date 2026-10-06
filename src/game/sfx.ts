@@ -2,7 +2,6 @@
 export class Sfx {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
-  private crowdGain: GainNode | null = null;
   muted = false;
 
   init() {
@@ -19,27 +18,6 @@ export class Sfx {
     this.master.gain.value = this.muted ? 0 : 0.8;
     this.master.connect(this.ctx.destination);
 
-    // murmúrio contínuo da torcida
-    const buf = this.noiseBuffer(3);
-    const src = this.ctx.createBufferSource();
-    src.buffer = buf;
-    src.loop = true;
-    const bp = this.ctx.createBiquadFilter();
-    bp.type = "bandpass";
-    bp.frequency.value = 650;
-    bp.Q.value = 0.5;
-    this.crowdGain = this.ctx.createGain();
-    this.crowdGain.gain.value = 0.05;
-    src.connect(bp).connect(this.crowdGain).connect(this.master);
-    src.start();
-  }
-
-  private noiseBuffer(seconds: number) {
-    const ctx = this.ctx!;
-    const buf = ctx.createBuffer(1, ctx.sampleRate * seconds, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    return buf;
   }
 
   setMuted(m: boolean) {
@@ -82,12 +60,12 @@ export class Sfx {
   }
 
   cheer() {
-    if (!this.ctx || !this.master || !this.crowdGain) return;
-    const t = this.ctx.currentTime;
-    this.crowdGain.gain.cancelScheduledValues(t);
-    this.crowdGain.gain.setValueAtTime(this.crowdGain.gain.value, t);
-    this.crowdGain.gain.linearRampToValueAtTime(0.32, t + 0.4);
-    this.crowdGain.gain.linearRampToValueAtTime(0.05, t + 4.5);
-    this.blip(700, 0.5, 0.05, "sawtooth");
+    this.blip(700, 0.5, 0.05, "sine");
+  }
+
+  dispose() {
+    if (this.ctx) void this.ctx.close();
+    this.ctx = null;
+    this.master = null;
   }
 }
