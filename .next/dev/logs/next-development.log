@@ -1,0 +1,5 @@
+{"timestamp":"00:00:01.001","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:04.445","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:00:09.265","source":"Browser","level":"WARN","message":"THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."}
+{"timestamp":"00:00:09.310","source":"Server","level":"WARN","message":"[browser] \"THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.\" \"(src/game/renderer.ts:749:19)\""}
+{"timestamp":"00:00:09.310","source":"Browser","level":"WARN","message":"THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."}
