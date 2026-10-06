@@ -18,3 +18,30 @@ body {
   margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
+
+.rotate-notice { display: none; }
+
+@media (max-width: 767px) and (orientation: portrait) and (pointer: coarse) {
+  .rotate-notice { display: flex; }
+}
+
+@media (max-height: 540px) and (orientation: landscape) {
+  .game-screen { height: 100dvh; }
+  .game-score { top: max(6px, env(safe-area-inset-top)); left: max(8px, env(safe-area-inset-left)); transform: none; }
+  .game-score > div { border-radius: 8px; }
+  .game-score > div > div { padding: 5px 8px; min-width: 0; gap: 5px; font-size: 18px; }
+  .game-score img { width: 22px; height: 16px; }
+  .game-score span { font-size: 12px; }
+  .game-score > p { text-align: left; font-size: 10px; }
+  .game-controls { top: max(6px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right)); gap: 4px; }
+  .game-controls button { min-height: 36px; padding: 4px 8px; font-size: 11px; }
+  .game-bet { top: 70px; left: max(8px, env(safe-area-inset-left)); width: 155px; padding: 6px 8px; font-size: 10px; }
+  .game-bet > p:nth-child(4), .game-bet > p:nth-child(5) { display: none; }
+  .game-aim { bottom: max(6px, env(safe-area-inset-bottom)); width: min(52vw, 420px); padding: 6px 10px; border-radius: 10px; }
+  .game-aim > p:first-child { font-size: 11px; }
+  .game-aim > p:nth-child(2) { display: none; }
+  .game-aim > div { margin-top: 4px; height: 5px; }
+  .game-feed { bottom: max(6px, env(safe-area-inset-bottom)); left: max(8px, env(safe-area-inset-left)); max-width: 23vw; }
+  .game-feed p { font-size: 9px; padding: 3px 5px; }
+  .game-feed p:not(:first-child) { display: none; }
+}

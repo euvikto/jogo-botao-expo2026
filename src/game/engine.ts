@@ -86,7 +86,7 @@ export class Match {
   turn: 0 | 1 = 0;
   plan: Plan | null = null;
   lastScorer: 0 | 1 | null = null;
-  readonly humanTeam: 0 | 1 = 0;
+  readonly humanTeam: 0 | 1 | null;
 
   private timer = THINK_TIME;
   private movesThisTurn = 0;
@@ -98,7 +98,8 @@ export class Match {
   private listeners: ((e: MatchEvent) => void)[] = [];
   private hitCooldown = 0;
 
-  constructor(home: Team, away: Team) {
+  constructor(home: Team, away: Team, spectator = false) {
+    this.humanTeam = spectator ? null : 0;
     this.teams = [home, away];
     let id = 0;
     this.ball = {
@@ -282,7 +283,7 @@ export class Match {
 
   /** Inicia a mira do jogador humano em um de seus botões. */
   beginHumanAim(bodyId: number) {
-    if (this.phase !== "thinking" || this.turn !== this.humanTeam) return false;
+    if (this.humanTeam === null || this.phase !== "thinking" || this.turn !== this.humanTeam) return false;
     const body = this.buttons[this.humanTeam].find((b) => b.id === bodyId);
     if (!body) return false;
     this.plan = { body, dx: 1, dz: 0, speed: 0, good: true };

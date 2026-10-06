@@ -29,6 +29,7 @@ interface BetRow {
 }
 
 interface Running {
+  spectator?: boolean;
   betId: number;
   home: Team;
   away: Team;
@@ -36,6 +37,7 @@ interface Running {
 }
 
 interface Result {
+  spectator?: boolean;
   won: boolean;
   homeGoals: number;
   awayGoals: number;
@@ -113,6 +115,7 @@ export default function BotaoApp() {
   const [busy, setBusy] = useState(false);
 
   const [running, setRunning] = useState<Running | null>(null);
+  const [spectator, setSpectator] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
 
   const home = getTeam(homeId)!;
@@ -164,6 +167,11 @@ export default function BotaoApp() {
 
   function startMatch() {
     setError(null);
+    if (spectator) {
+      setResult(null);
+      setRunning({ betId: 0, home, away, spectator: true, bet: { pick: "home", stake: 0, odds: 0 } });
+      return;
+    }
     if (stakeCents < 100) return setError("Aposta mínima: R$ 1,00.");
     if (stakeCents > balance) return setError("Saldo insuficiente.");
     setBusy(true);
@@ -198,6 +206,10 @@ export default function BotaoApp() {
     const r = running;
     if (!r) return;
     setRunning(null);
+    if (r.spectator) {
+      setResult({ spectator: true, won: false, homeGoals: hg, awayGoals: ag, payout: 0, stake: 0, home: r.home, away: r.away });
+      return;
+    }
     try {
       const wallet = readWallet();
       const bet = wallet.history.find((b) => b.id === r.betId);
@@ -254,6 +266,7 @@ export default function BotaoApp() {
         home={running.home}
         away={running.away}
         bet={running.bet}
+        spectator={running.spectator}
         onFinish={finishMatch}
         onExit={exitMatch}
       />
@@ -280,7 +293,7 @@ export default function BotaoApp() {
               <h1 className="text-2xl font-black leading-none tracking-tight sm:text-3xl">
                 Botão <span className="text-emerald-400">Copa 2026</span>
               </h1>
-              <p className="text-xs text-white/60 sm:text-sm">Futebol de botão · você x CPU · 48 seleções</p>
+              <p className="text-xs text-white/60 sm:text-sm">Futebol de botão · jogar ou assistir · 48 seleções</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -299,11 +312,15 @@ export default function BotaoApp() {
           </div>
         </header>
 
+        <div className="mt-6 flex flex-wrap gap-3" aria-label="Modo de partida">
+          <button onClick={() => setSpectator(false)} aria-pressed={!spectator} className={`rounded-xl px-5 py-3 font-bold ${!spectator ? "bg-emerald-500 text-slate-950" : "bg-white/10"}`}>Jogar — você x CPU</button>
+          <button onClick={() => setSpectator(true)} aria-pressed={spectator} className={`rounded-xl px-5 py-3 font-bold ${spectator ? "bg-emerald-500 text-slate-950" : "bg-white/10"}`}>Assistir — CPU x CPU</button>
+        </div>
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.35fr_1fr]">
           {/* Confronto */}
           <section className="rounded-3xl bg-white/[0.06] p-5 ring-1 ring-white/10 backdrop-blur">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">1. Escolha sua seleção e o adversário</h2>
+              <h2 className="text-lg font-bold">{spectator ? "1. Escolha as duas seleções" : "1. Escolha sua seleção e o adversário"}</h2>
               <button
                 onClick={randomMatch}
                 className="rounded-lg bg-white/10 px-3 py-1.5 text-sm font-semibold hover:bg-white/20"
@@ -327,14 +344,19 @@ export default function BotaoApp() {
             </div>
 
             <div className="mt-5 grid gap-5 sm:grid-cols-2">
-              <TeamPicker title="Você controla" value={homeId} other={awayId} onPick={(id) => selectTeam("home", id)} />
+              <TeamPicker title={spectator ? "Mandante (CPU)" : "Você controla"} value={homeId} other={awayId} onPick={(id) => selectTeam("home", id)} />
               <TeamPicker title="Adversário (CPU)" value={awayId} other={homeId} onPick={(id) => selectTeam("away", id)} />
             </div>
           </section>
 
           {/* Aposta */}
           <section className="space-y-6">
-            <div className="rounded-3xl bg-white/[0.06] p-5 ring-1 ring-white/10 backdrop-blur">
+            {spectator ? <div className="rounded-3xl bg-white/[0.06] p-5 ring-1 ring-white/10 backdrop-blur">
+              <h2 className="text-lg font-bold">2. Assista à partida</h2>
+              <p className="mt-3 text-white/70">As duas seleções jogam automaticamente. Você pode trocar a câmera e a velocidade durante o jogo.</p>
+              <button onClick={startMatch} className="mt-5 w-full rounded-2xl bg-emerald-500 py-4 text-lg font-black text-slate-950 hover:bg-emerald-400">Assistir ao jogo ⚽</button>
+              <p className="mt-2 text-center text-xs text-white/50">Sem aposta e sem gastar saldo.</p>
+            </div> : <div className="rounded-3xl bg-white/[0.06] p-5 ring-1 ring-white/10 backdrop-blur">
               <h2 className="text-lg font-bold">2. Faça sua aposta</h2>
 
               <div className="mt-4 grid grid-cols-3 gap-2">
@@ -418,6 +440,7 @@ export default function BotaoApp() {
               </p>
             </div>
 
+            }
             <div className="rounded-3xl bg-white/[0.06] p-5 ring-1 ring-white/10 backdrop-blur">
               <h2 className="text-lg font-bold">Últimas apostas</h2>
               {history.length === 0 ? (
@@ -470,7 +493,7 @@ export default function BotaoApp() {
               </p>
               <Badge team={result.away} size={56} />
             </div>
-            {result.error ? (
+            {result.spectator ? <p className="mt-6 text-lg font-bold text-emerald-300">{result.homeGoals === result.awayGoals ? "A partida terminou empatada." : `${result.homeGoals > result.awayGoals ? result.home.name : result.away.name} venceu!`}</p> : result.error ? (
               <p className="mt-6 rounded-lg bg-rose-500/20 px-3 py-2 text-sm text-rose-200">{result.error}</p>
             ) : result.won ? (
               <div className="mt-6">
@@ -492,7 +515,7 @@ export default function BotaoApp() {
               onClick={() => setResult(null)}
               className="mt-6 w-full rounded-2xl bg-emerald-500 py-3 text-lg font-black text-slate-950 hover:bg-emerald-400"
             >
-              Nova aposta
+              {result.spectator ? "Assistir outra partida" : "Nova aposta"}
             </button>
           </div>
         </div>

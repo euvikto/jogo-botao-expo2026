@@ -14,6 +14,7 @@ export interface ActiveBet {
 }
 
 interface Props {
+  spectator?: boolean;
   home: Team;
   away: Team;
   bet: ActiveBet;
@@ -42,7 +43,7 @@ function pickLabel(pick: Pick, home: Team, away: Team) {
   return "Empate";
 }
 
-export default function GameView({ home, away, bet, onFinish, onExit }: Props) {
+export default function GameView({ home, away, bet, onFinish, onExit, spectator = false }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const speedRef = useRef(2);
   const camRef = useRef<CamMode>("tv");
@@ -71,7 +72,7 @@ export default function GameView({ home, away, bet, onFinish, onExit }: Props) {
 
   useEffect(() => {
     const el = mountRef.current!;
-    const match = new Match(home, away);
+    const match = new Match(home, away, spectator);
     const stadium = new Stadium3D(el, match);
     const sfx = new Sfx();
     sfxRef.current = sfx;
@@ -141,11 +142,12 @@ export default function GameView({ home, away, bet, onFinish, onExit }: Props) {
     }, 120);
 
     let raf = 0;
+    const portraitMobile = window.matchMedia("(max-width: 767px) and (orientation: portrait) and (pointer: coarse)");
     let last = performance.now();
     const loop = (now: number) => {
       const dt = Math.min((now - last) / 1000, 0.1);
       last = now;
-      let sim = dt * speedRef.current;
+      let sim = portraitMobile.matches ? 0 : dt * speedRef.current;
       const simTotal = sim;
       while (sim > 0) {
         const step = Math.min(sim, 0.2);
@@ -209,7 +211,7 @@ export default function GameView({ home, away, bet, onFinish, onExit }: Props) {
       canvas.removeEventListener("pointercancel", pointerUp);
       stadium.dispose();
     };
-  }, [home, away]);
+  }, [home, away, spectator]);
 
   const changeSpeed = (s: number) => {
     speedRef.current = s;
@@ -230,11 +232,17 @@ export default function GameView({ home, away, bet, onFinish, onExit }: Props) {
   const winning = current === bet.pick;
 
   return (
-    <div className="fixed inset-0 bg-black text-white select-none">
+    <div className="game-screen fixed inset-0 bg-black text-white select-none">
       <div ref={mountRef} className="absolute inset-0" />
+      <div className="rotate-notice absolute inset-0 z-40 flex-col items-center justify-center bg-slate-950 px-8 text-center" role="status">
+        <span className="mb-5 text-6xl" aria-hidden="true">↻</span>
+        <h2 className="text-2xl font-black text-emerald-300">Gire o celular para jogar</h2>
+        <p className="mt-3 max-w-xs text-white/70">Deixe o aparelho deitado para ver todo o campo. A partida fica pausada enquanto você gira a tela.</p>
+        <button onClick={onExit} className="mt-8 rounded-xl bg-white/10 px-5 py-3 font-semibold">Voltar às seleções</button>
+      </div>
 
       {/* Placar */}
-      <div className="pointer-events-none absolute left-1/2 top-3 z-10 -translate-x-1/2">
+      <div className="game-score pointer-events-none absolute left-1/2 top-3 z-10 -translate-x-1/2">
         <div className="flex items-stretch overflow-hidden rounded-xl bg-slate-950/85 shadow-2xl ring-1 ring-white/15 backdrop-blur">
           <div className="flex items-center gap-2 px-3 py-2 sm:px-4">
             <img src={home.crest} alt="" className="h-6 w-8 rounded-sm object-cover shadow" />
@@ -257,14 +265,16 @@ export default function GameView({ home, away, bet, onFinish, onExit }: Props) {
             ? "Encerrado"
             : hud.phase === "halftime"
               ? "Intervalo"
-              : hud.turn === 0
+              : spectator
+                ? `CPU · ${hud.turn === 0 ? home.name : away.name}`
+                : hud.turn === 0
                 ? `Sua vez · ${home.name}`
                 : `CPU pensando · ${away.name}`}
         </p>
       </div>
 
-      {hud.phase === "thinking" && hud.turn === 0 && (
-        <div className="pointer-events-none absolute bottom-5 left-1/2 z-10 w-[min(92vw,520px)] -translate-x-1/2 rounded-2xl bg-slate-950/85 px-5 py-3 text-center shadow-2xl ring-1 ring-white/15 backdrop-blur">
+      {!spectator && hud.phase === "thinking" && hud.turn === 0 && (
+        <div className="game-aim pointer-events-none absolute bottom-5 left-1/2 z-10 w-[min(92vw,520px)] -translate-x-1/2 rounded-2xl bg-slate-950/85 px-5 py-3 text-center shadow-2xl ring-1 ring-white/15 backdrop-blur">
           <p className="font-bold text-emerald-300">
             {isAiming ? "Solte para chutar" : "Clique em um botão, puxe para trás e solte"}
           </p>
@@ -279,7 +289,7 @@ export default function GameView({ home, away, bet, onFinish, onExit }: Props) {
       )}
 
       {/* Aposta */}
-      <div className="absolute left-3 top-3 z-10 w-56 rounded-xl bg-slate-950/80 p-3 text-xs shadow-xl ring-1 ring-white/15 backdrop-blur sm:w-64 sm:text-sm">
+      {!spectator && <div className="game-bet absolute left-3 top-3 z-10 w-56 rounded-xl bg-slate-950/80 p-3 text-xs shadow-xl ring-1 ring-white/15 backdrop-blur sm:w-64 sm:text-sm">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-400">Sua aposta</p>
         <p className="mt-1 font-semibold">{pickLabel(bet.pick, home, away)}</p>
         <p className="text-white/70">
@@ -297,8 +307,9 @@ export default function GameView({ home, away, bet, onFinish, onExit }: Props) {
         </p>
       </div>
 
+      }
       {/* Controles */}
-      <div className="absolute right-3 top-3 z-10 flex flex-col items-end gap-2">
+      <div className="game-controls absolute right-3 top-3 z-10 flex flex-col items-end gap-2">
         <div className="flex gap-1 rounded-xl bg-slate-950/80 p-1 ring-1 ring-white/15 backdrop-blur">
           {CAMS.map((c) => (
             <button
@@ -341,7 +352,7 @@ export default function GameView({ home, away, bet, onFinish, onExit }: Props) {
       </div>
 
       {/* Narração */}
-      <div className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[70%] space-y-1 sm:max-w-sm">
+      <div className="game-feed pointer-events-none absolute bottom-3 left-3 z-10 max-w-[70%] space-y-1 sm:max-w-sm">
         {feed.slice(0, 4).map((f, i) => (
           <p
             key={`${f}-${i}`}
@@ -370,7 +381,7 @@ export default function GameView({ home, away, bet, onFinish, onExit }: Props) {
         <div className="absolute inset-0 z-30 grid place-items-center bg-black/70 p-4">
           <div className="w-full max-w-sm rounded-2xl bg-slate-900 p-6 text-center ring-1 ring-white/15">
             <p className="text-lg font-bold">Sair da partida?</p>
-            <p className="mt-2 text-sm text-white/70">Se sair agora você perde a aposta de {formatBRL(bet.stake)}.</p>
+            <p className="mt-2 text-sm text-white/70">{spectator ? "Voltar para a escolha das seleções?" : `Se sair agora você perde a aposta de ${formatBRL(bet.stake)}.`}</p>
             <div className="mt-5 flex gap-3">
               <button
                 onClick={() => setConfirmExit(false)}
