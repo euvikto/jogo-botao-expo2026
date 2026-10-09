@@ -12,7 +12,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$ne
 ;
 ;
 const metadata = {
-  title: "Jogo de Botão Copa 2026 — futebol de botão 3D",
+  title: "Copa Botão 2026 — futebol de botão 3D",
   description:
     "Futebol de botão em 3D: escolha uma das 48 seleções da Copa de 2026 e jogue contra a CPU.",
 };
