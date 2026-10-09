@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Botão Copa 2026 — futebol de botão 3D",
+  title: "Copa Botão 2026 — futebol de botão 3D",
   description: "Futebol de botão em 3D: escolha uma das 48 seleções da Copa de 2026 e jogue contra a CPU.",
 };
 
