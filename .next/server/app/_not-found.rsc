@@ -12,4 +12,4 @@ d:[]
 7:"$Wd"
 9:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]
 6:null
-b:[["$","title","0",{"children":"Botão Copa 2026 — futebol de botão 3D"}],["$","meta","1",{"name":"description","content":"Futebol de botão em 3D: escolha uma das 48 seleções da Copa de 2026 e jogue contra a CPU."}]]
+b:[["$","title","0",{"children":"Copa Botão 2026 — futebol de botão 3D"}],["$","meta","1",{"name":"description","content":"Futebol de botão em 3D: escolha uma das 48 seleções da Copa de 2026 e jogue contra a CPU."}]]
