@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { computeOdds, formatBRL, resultOf, type Pick } from "@/lib/odds";
-import { getTeam, TEAMS, type Team } from "@/lib/teams";
+import { getTeam, matchKits, TEAMS, type Team } from "@/lib/teams";
 import type { ActiveBet } from "./GameView";
 
 const GameView = dynamic(() => import("./GameView"), {
@@ -120,8 +120,7 @@ export default function BotaoApp() {
   const [localPlayers, setLocalPlayers] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
 
-  const home = getTeam(homeId)!;
-  const away = getTeam(awayId)!;
+  const [home, away] = useMemo(() => matchKits(getTeam(homeId)!, getTeam(awayId)!), [homeId, awayId]);
   const odds = useMemo(() => computeOdds(home, away), [home, away]);
 
   useEffect(() => {
@@ -344,6 +343,7 @@ export default function BotaoApp() {
               <div className="flex flex-col items-center gap-2 text-center">
                 <Badge team={away} size={72} />
                 <p className="font-bold">{away.name}</p>
+                {away.alternate && <p className="text-xs text-amber-300">Uniforme alternativo <span className="inline-block h-3 w-3 rounded-full ring-1 ring-white/50" style={{ background: away.primary }} /></p>}
                 <StrengthBar value={away.strength} />
               </div>
             </div>

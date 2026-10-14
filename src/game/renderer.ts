@@ -129,12 +129,11 @@ function makeBallTexture() {
   });
 }
 
-function makeButtonTexture(team: Team, num: number, gk: boolean) {
+function makeButtonTexture(team: Team, gk: boolean) {
   const texture = canvasTex(256, 256, (c) => {
     const isYellow = team.primary.toLowerCase().startsWith("#f2c4");
     const bg = gk ? (isYellow ? "#19b8ff" : "#f5d90a") : team.primary;
     const ring = gk ? "#111111" : team.secondary;
-    const fg = gk ? "#111111" : team.text;
     c.fillStyle = bg;
     c.fillRect(0, 0, 256, 256);
     c.lineWidth = 16;
@@ -142,33 +141,28 @@ function makeButtonTexture(team: Team, num: number, gk: boolean) {
     c.beginPath();
     c.arc(128, 128, 104, 0, Math.PI * 2);
     c.stroke();
-    c.fillStyle = fg;
-    c.font = "bold 92px sans-serif";
-    c.textAlign = "center";
-    c.textBaseline = "middle";
-    c.fillText(String(num), 128, 150);
   });
-  if (!gk) {
+  {
     const image = new Image();
     image.onload = () => {
       const canvas = texture.image as HTMLCanvasElement;
       const c = canvas.getContext("2d")!;
       c.save();
       c.beginPath();
-      c.arc(128, 78, 48, 0, Math.PI * 2);
+      c.roundRect(43, 71, 170, 114, 8);
       c.clip();
-      c.drawImage(image, 72, 42, 112, 72);
+      c.fillStyle = "#ffffff";
+      c.fillRect(43, 71, 170, 114);
+      const scale = Math.min(170 / image.naturalWidth, 114 / image.naturalHeight);
+      const width = image.naturalWidth * scale;
+      const height = image.naturalHeight * scale;
+      c.drawImage(image, 128 - width / 2, 128 - height / 2, width, height);
       c.restore();
       c.lineWidth = 7;
       c.strokeStyle = "rgba(255,255,255,.9)";
       c.beginPath();
-      c.arc(128, 78, 49, 0, Math.PI * 2);
+      c.roundRect(43, 71, 170, 114, 8);
       c.stroke();
-      c.fillStyle = team.text;
-      c.font = "bold 66px sans-serif";
-      c.textAlign = "center";
-      c.textBaseline = "middle";
-      c.fillText(String(num), 128, 180);
       texture.needsUpdate = true;
     };
     image.src = team.crest;
@@ -536,7 +530,7 @@ export class Stadium3D {
       const top = new THREE.Mesh(
         topGeo,
         new THREE.MeshStandardMaterial({
-          map: makeButtonTexture(team, b.num, isGk),
+          map: makeButtonTexture(team, isGk),
           roughness: 0.3,
         }),
       );

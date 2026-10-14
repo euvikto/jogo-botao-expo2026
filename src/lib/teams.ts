@@ -7,6 +7,7 @@ export interface Team {
   text: string;
   strength: number;
   crest: string;
+  alternate?: boolean;
   confederation: "AFC" | "CAF" | "Concacaf" | "CONMEBOL" | "OFC" | "UEFA";
 }
 
@@ -68,4 +69,14 @@ export const TEAMS: Team[] = [
 
 export function getTeam(id: string): Team | undefined {
   return TEAMS.find((t) => t.id === id);
+}
+
+/** Uniforme visitante com contraste forte quando as cores principais se confundem. */
+export function matchKits(home: Team, away: Team): [Team, Team] {
+  const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const distance = (a: string, b: string) => Math.hypot(...rgb(a).map((v, i) => v - rgb(b)[i]));
+  if (distance(home.primary, away.primary) >= 0.65) return [home, away];
+  const candidates = [away.secondary, "#ffffff", "#111827", "#facc15", "#06b6d4"];
+  const primary = candidates.reduce((best, color) => distance(home.primary, color) > distance(home.primary, best) ? color : best);
+  return [home, { ...away, primary, secondary: home.primary, text: "#111111", alternate: true }];
 }
